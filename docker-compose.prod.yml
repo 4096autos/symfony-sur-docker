@@ -1,0 +1,50 @@
+version: "3.8"
+services:
+
+  db_prod:
+    image: mariadb:10.5.18
+    container_name: db_prod
+    restart: always
+    volumes:
+      - db-data-prod:/var/lib/mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: mercifaa             # Mot de passe pour l'utilisateur root
+      MYSQL_DATABASE: db_prod                   # Base de données à créer
+      MYSQL_USER: faa                           # Nouvel utilisateur
+      MYSQL_PASSWORD: mercifaa                  # Mot de passe de l'utilisateur
+    networks:
+      - prod
+    ports:
+      - 3312:3306                               # Expose le port 3306 du conteneur sur le port 3312 de l'hôte
+
+  phpmyadmin_prod:
+    image: phpmyadmin
+    container_name: phpmyadmin_prod
+    restart: always
+    depends_on:
+      - db_prod
+    ports:
+      - 8022:80                                 # Expose PhpMyAdmin sur le port 8022
+    environment:
+      PMA_HOST: db_prod                         # Nom d'hôte de la base de données
+    networks:
+      - prod
+
+  www_prod:
+    build: php                                  # Assurez-vous d'avoir un Dockerfile dans le dossier php
+    container_name: www_prod
+    ports:
+      - "80:80"                               # Expose le port 80 de l'application sur le port 8032
+    volumes:
+      - ./php/vhosts:/etc/apache2/sites-enabled # Volume pour les configurations Apache
+      - ./:/var/www                             # Volume pour le code de l'application
+      - ./app/php.ini:/usr/local/etc/php/php.ini # Configuration PHP
+    restart: always
+    networks:
+      - prod
+
+networks:
+  prod:
+
+volumes:
+  db-data-prod:                                # Volume pour la persistance des données de la base

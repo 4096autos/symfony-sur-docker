@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+
+  db_pre:
+    image: mariadb:10.5.18
+    container_name: db_pre
+    restart: always
+    volumes:
+      - db-data-pre:/var/lib/mariadb
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    networks:
+      - pre
+    ports:
+      - 3311:3306
+
+  phpmyadmin_pre:
+    image: phpmyadmin
+    container_name: phpmyadmin_pre
+    restart: always
+    depends_on:
+      - db_pre
+    ports:
+      - 8021:80
+    environment:
+      PMA_HOST: db_pre
+    networks:
+      - pre
+
+  www_pre:
+    build: php
+    container_name: www_pre
+    ports:
+      - "9001:80"
+    volumes:
+      - ./php/vhosts:/etc/apache2/sites-enabled
+      - ./:/var/www
+      - ./app/php.ini:/usr/local/etc/php/php.ini
+    restart: always
+    networks:
+      - pre
+
+networks:
+  pre:
+
+volumes:
+  db-data-pre:
